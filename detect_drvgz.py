@@ -307,9 +307,9 @@ def detect(save_img=False):
                             sp = im0.shape
                             #lx1 = int(0.95 * sp[1])
                             #ly1 = int(0.75 * sp[0])
-                            lx1 = int(sp[1]-100)
-                            ly1 = int(sp[0]-10)
-                            im0 = cv2.putText(im0, "Looking: " + looking, (lx1, ly1 - 2), 0, 1 / 3, [225, 0, 0], thickness=1, lineType=cv2.LINE_AA)
+                            lx1 = int(sp[1]-sp[1]/2)
+                            ly1 = int(20)
+                            im0 = cv2.putText(im0, "Driver Looking: " + looking, (lx1, ly1), 0, 1/2, [225, 0, 0], thickness=1, lineType=cv2.LINE_AA)
                             #print(looking)
                             if save_txt:
                                 pattth = txt_path.replace("labels","looking")
@@ -411,8 +411,10 @@ if __name__ == '__main__':
     resnet101_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 4, 23, 3],channels = [64, 128, 256, 512])
     resnet152_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 8, 36, 3],channels = [64, 128, 256, 512])
     OUTPUT_DIM = 2
+    ptth = str(opt.weights)
+    ptth = ptth.replace(ptth.split('/')[-1],'DriverGazeModel.pt')
     DriverGazeModel = ResNet(resnet50_config, OUTPUT_DIM)
-    DriverGazeModel.load_state_dict(torch.load(opt.weights.replace(opt.weights.split('/')[-1],'DriverGazeModel.pt')))
+    DriverGazeModel.load_state_dict(torch.load(ptth))
     
     #opt.weights = 'best.pt'
     #opt.source = "0"
