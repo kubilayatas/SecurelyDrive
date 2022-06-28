@@ -292,13 +292,18 @@ def detect(save_img=False):
                         if names[int(cls)] == "DriverFace":
                             xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                             xyxy_list = torch.tensor(xyxy).tolist()
+                            x1 = xywh[0]*img.shape[3]-(xywh[2]*img.shape[3])/2
+                            x2 = xywh[0]*img.shape[3]+(xywh[2]*img.shape[3])/2
+                            y1 = xywh[1]*img.shape[2]-(xywh[3]*img.shape[2])/2
+                            y2 = xywh[1]*img.shape[2]+(xywh[3]*img.shape[2])/2
                             trans = transforms.ToPILImage()
-                            #cropped_im = trans(mmm)
-                            #cropped_im.shape()
-                            #croppedim0 = im0[]
-                            mmm = im0[int(xyxy_list[0]):int(xyxy_list[2]),int(xyxy_list[1]):int(xyxy_list[3]),:]
-                            mmm = trans(mmm)
-                            looking = predict(DriverGazeModel,mmm)
+                            cropped_im = transforms.functional.crop(img,int(y1),int(x1),int(y2-y1),int(x2-x1))
+                            cpu = torch.device('cpu')
+                            cropped_im = cropped_im.to(cpu)
+                            cropped_im = cropped_im[0,:,:,:]
+                            cropped_im = trans(cropped_im)
+                            #cropped_im.show()
+                            looking = predict(DriverGazeModel,cropped_im)
                             sp = im0.shape
                             #lx1 = int(0.95 * sp[1])
                             #ly1 = int(0.75 * sp[0])
@@ -409,19 +414,18 @@ if __name__ == '__main__':
     DriverGazeModel = ResNet(resnet50_config, OUTPUT_DIM)
     DriverGazeModel.load_state_dict(torch.load(opt.weights.replace(opt.weights.split('/')[-1],'DriverGazeModel.pt')))
     
-	"""
-    opt.weights = 'best.pt'
-    opt.source = "0"
+    #opt.weights = 'best.pt'
+    #opt.source = "0"
     #opt.source = "./001-AltayMirzaliyev-1.mp4"
     #opt.source = "./20200224002.mp4"
-    opt.img_size = 416
-    opt.conf = 0.4
-    opt.save_txt = True
-    opt.view_img = True
-    opt.save_conf = True
-    opt.cache = True
-    opt.drv_gaze = True
-    """
+    #opt.img_size = 416
+    #opt.conf = 0.4
+    #opt.save_txt = True
+    #opt.view_img = True
+    #opt.save_conf = True
+    #opt.cache = True
+    #opt.drv_gaze = True
+    
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
