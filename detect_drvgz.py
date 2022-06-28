@@ -293,9 +293,26 @@ def detect(save_img=False):
                             xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                             xyxy_list = torch.tensor(xyxy).tolist()
                             trans = transforms.ToPILImage()
-                            cropped_im = trans(mmm)
-                            cropped_im.shape()
+                            #cropped_im = trans(mmm)
+                            #cropped_im.shape()
                             #croppedim0 = im0[]
+                            mmm = im0[int(xyxy_list[0]):int(xyxy_list[2]),int(xyxy_list[1]):int(xyxy_list[3]),:]
+                            mmm = trans(mmm)
+                            looking = predict(DriverGazeModel,mmm)
+                            sp = im0.shape
+                            #lx1 = int(0.95 * sp[1])
+                            #ly1 = int(0.75 * sp[0])
+                            lx1 = int(sp[1]-100)
+                            ly1 = int(sp[0]-10)
+                            im0 = cv2.putText(im0, "Looking: " + looking, (lx1, ly1 - 2), 0, 1 / 3, [225, 0, 0], thickness=1, lineType=cv2.LINE_AA)
+                            #print(looking)
+                            if save_txt:
+                                pattth = txt_path.replace("labels","looking")
+                                pattth = pattth.replace("\\" + pattth.split("\\")[-1],"")
+                                os.makedirs(pattth, exist_ok=True)
+                                pattth = txt_path.replace("labels","looking")
+                                with open(txt_path.replace("labels","looking") + '.lkng', 'a') as f:
+                                    f.write(looking + '\n')
                             
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
@@ -402,7 +419,7 @@ if __name__ == '__main__':
     opt.view_img = True
     opt.save_conf = True
     opt.cache = True
-    opt.drv_gaze = False
+    opt.drv_gaze = True
     
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
