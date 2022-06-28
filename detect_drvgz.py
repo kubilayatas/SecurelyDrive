@@ -409,6 +409,7 @@ if __name__ == '__main__':
     DriverGazeModel = ResNet(resnet50_config, OUTPUT_DIM)
     DriverGazeModel.load_state_dict(torch.load(opt.weights.replace(opt.weights.split('/')[-1],'DriverGazeModel.pt')))
     
+	"""
     opt.weights = 'best.pt'
     opt.source = "0"
     #opt.source = "./001-AltayMirzaliyev-1.mp4"
@@ -420,7 +421,7 @@ if __name__ == '__main__':
     opt.save_conf = True
     opt.cache = True
     opt.drv_gaze = True
-    
+    """
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
             for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
