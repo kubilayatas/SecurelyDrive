@@ -202,7 +202,7 @@ class Bottleneck(nn.Module):
         return x
 #############################################################
 
-def detect(save_img=False):
+def detect(save_img=True):
     source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
@@ -312,12 +312,19 @@ def detect(save_img=False):
                             im0 = cv2.putText(im0, "Driver Looking: " + looking, (lx1, ly1), 0, 1/2, [225, 0, 0], thickness=1, lineType=cv2.LINE_AA)
                             #print(looking)
                             if save_txt:
+                                pattth = txt_path.split('\\')
+                                pattth = pattth[0:3]
+                                pattth.append('looking')
+                                os.makedirs(os.path.join(*pattth), exist_ok=True)
+                                with open(os.path.join(*pattth,p.stem) + '.lkng', 'a') as dd:
+                                    dd.write(p.stem + '\t'+looking + '\n')
+                            """if save_txt:
                                 pattth = txt_path.replace("labels","looking")
                                 pattth = pattth.replace("\\" + pattth.split("\\")[-1],"")
                                 os.makedirs(pattth, exist_ok=True)
                                 pattth = txt_path.replace("labels","looking")
                                 with open(txt_path.replace("labels","looking") + '.lkng', 'a') as f:
-                                    f.write(looking + '\n')
+                                    f.write(looking + '\n')"""
                             
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
