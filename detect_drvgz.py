@@ -203,7 +203,7 @@ class Bottleneck(nn.Module):
 #############################################################
 
 def detect(save_img=True):
-    source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
+    source, weights, view_img, save_txt, imgsz = opt.source, opt.DetectorWeights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
         ('rtsp://', 'rtmp://', 'http://'))
 
@@ -392,7 +392,8 @@ def predict(model,img,ImgSize=224):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
+    parser.add_argument('--DetectorWeights', nargs='+', type=str, default='ObjectDetectorModel.pt', help='model.pt path(s)')
+    parser.add_argument('--DriverGazeWeights', nargs='+', type=str, default='DriverGazeModel.pt', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='data/images', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
@@ -418,10 +419,8 @@ if __name__ == '__main__':
     resnet101_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 4, 23, 3],channels = [64, 128, 256, 512])
     resnet152_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 8, 36, 3],channels = [64, 128, 256, 512])
     OUTPUT_DIM = 2
-    ptth = str(opt.weights)
-    ptth = ptth.replace(ptth.split('/')[-1],'DriverGazeModel.pt')
     DriverGazeModel = ResNet(resnet50_config, OUTPUT_DIM)
-    DriverGazeModel.load_state_dict(torch.load(ptth))
+    DriverGazeModel.load_state_dict(torch.load(opt.DriverGazeWeights))
     
     #opt.weights = 'best.pt'
     #opt.source = "0"
@@ -437,8 +436,8 @@ if __name__ == '__main__':
     
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
-            for opt.weights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
+            for opt.DetectorWeights in ['yolov5s.pt', 'yolov5m.pt', 'yolov5l.pt', 'yolov5x.pt']:
                 detect()
-                strip_optimizer(opt.weights)
+                strip_optimizer(opt.DetectorWeights)
         else:
             detect()
