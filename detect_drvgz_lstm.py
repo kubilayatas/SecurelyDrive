@@ -371,7 +371,32 @@ def detect(save_img=True):
                         lst.append([cl,xc,yc,ww,hh])
                     df = pd.DataFrame(lst,columns=['Class','Xc','Yc','W','H'])
                 for i in range(0,len(names)):
-                    if names[i] == "DriverHand":
+                    if names[i] == "Cigarette":
+                        fd = df[df['Class']=='{}'.format(i)]
+                        fd['Prox'] = abs(fd.Xc.astype(float)-0.0)/abs(fd.Xc.astype(float)-1.0)
+                        fd = fd.sort_values(by=['Prox'],axis=0)
+                        fd = fd[fd['Prox']<0.5]
+                        fd.reset_index(drop=True,inplace=True)
+                        if len(fd)==0:
+                            lstmdat.append(0.0) # x coord
+                            lstmdat.append(1.0) # y coord
+                        else:
+                            lstmdat.append(float(fd['Xc'][0])) # Right Hand x coord
+                            lstmdat.append(float(fd['Yc'][0])) # Right Hand y coord
+                    elif names[i] == "Cellphone":
+                        fd = df[df['Class']=='{}'.format(i)]
+                        fd['Prox'] = abs(fd.Xc.astype(float)-0.0)/abs(fd.Xc.astype(float)-1.0)
+                        fd = fd.sort_values(by=['Prox'],axis=0)
+                        fd = fd[fd['Prox']<0.6]
+                        fd.reset_index(drop=True,inplace=True)
+                        if len(fd)==0:
+                            lstmdat.append(0.0) # x coord
+                            lstmdat.append(1.0) # y coord
+                        else:
+                            lstmdat.append(float(fd['Xc'][0])) # Right Hand x coord
+                            lstmdat.append(float(fd['Yc'][0])) # Right Hand y coord
+                        
+                    elif names[i] == "DriverHand":
                         fd = df[df['Class']=='{}'.format(i)]
                         fd.reset_index(drop=True,inplace=True)
                         if len(fd)==0:
