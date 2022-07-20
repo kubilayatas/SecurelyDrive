@@ -353,23 +353,27 @@ def detect(save_img=True):
                         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
                     vid_writer.write(im0)
 
-            if opt.extract_lstmdata and len(det):
+            if opt.extract_lstmdata:# and len(det):
                 lstm_txt_path = str(save_dir / 'lstm_data' / p.stem)
                 lstmdat = [] #if names[int(cls)] == "DriverFace":
                 lstmdat.append(p.stem + ("_{:04d}.jpg".format(dataset.frame) if dataset.mode == 'video' else ''))
-                with open(txt_path + '.txt', 'r') as f:
-                    ddt = f.read()
-                    ddt = ddt.split('\n')
-                    ddt = list(filter(None, ddt))
-                lst = []
-                for i,dd in enumerate(ddt):
-                    cl,xc,yc,ww,hh = dd.split(' ')
-                    #print(nm,cl,xc,yc,ww,hh)
-                    lst.append([cl,xc,yc,ww,hh])
-                df = pd.DataFrame(lst,columns=['Class','Xc','Yc','W','H'])
+                if len(det)==0:
+                    df = pd.DataFrame(columns=['Class','Xc','Yc','W','H'])
+                else:
+                    with open(txt_path + '.txt', 'r') as f:
+                        ddt = f.read()
+                        ddt = ddt.split('\n')
+                        ddt = list(filter(None, ddt))
+                    lst = []
+                    for i,dd in enumerate(ddt):
+                        cl,xc,yc,ww,hh = dd.split(' ')
+                        #print(nm,cl,xc,yc,ww,hh)
+                        lst.append([cl,xc,yc,ww,hh])
+                    df = pd.DataFrame(lst,columns=['Class','Xc','Yc','W','H'])
                 for i in range(0,len(names)):
                     if names[i] == "DriverHand":
                         fd = df[df['Class']=='{}'.format(i)]
+                        fd.reset_index(drop=True,inplace=True)
                         if len(fd)==0:
                             lstmdat.append(0.0) # Left  Hand x coord
                             lstmdat.append(1.0) # Left  Hand y coord
@@ -389,6 +393,7 @@ def detect(save_img=True):
                             lstmdat.append(float(fd['Yc'][0])) # Right Hand y coord
                     else:
                         fd = df[df['Class']=='{}'.format(i)]
+                        fd.reset_index(drop=True,inplace=True)
                         if len(fd)==0:
                             lstmdat.append(0.0) # 
                             lstmdat.append(0.0) #
