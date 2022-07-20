@@ -275,7 +275,7 @@ def detect(save_img=True):
                 p, s, im0 = Path(path), '', im0s
             looking = ""
             save_path = str(save_dir / p.name)
-            txt_path = str(save_dir / 'labels' / p.stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
+            txt_path = str(save_dir / 'labels' / p.stem) + ('_{:04d}'.format(dataset.frame-1) if dataset.mode == 'video' else '')
             s += '%gx%g ' % img.shape[2:]  # print string
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
@@ -356,7 +356,7 @@ def detect(save_img=True):
             if opt.extract_lstmdata:# and len(det):
                 lstm_txt_path = str(save_dir / 'lstm_data' / p.stem)
                 lstmdat = [] #if names[int(cls)] == "DriverFace":
-                lstmdat.append(p.stem + ("_{:04d}.jpg".format(dataset.frame) if dataset.mode == 'video' else ''))
+                lstmdat.append(p.stem + ("_{:04d}.jpg".format(dataset.frame-1) if dataset.mode == 'video' else ''))
                 if len(det)==0:
                     df = pd.DataFrame(columns=['Class','Xc','Yc','W','H'])
                 else:
