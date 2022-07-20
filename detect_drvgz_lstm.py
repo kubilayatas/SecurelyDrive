@@ -354,9 +354,9 @@ def detect(save_img=True):
                     vid_writer.write(im0)
 
             if opt.extract_lstmdata and len(det):
-                lstm_txt_path = str(save_dir / 'lstm_data' / p.stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
+                lstm_txt_path = str(save_dir / 'lstm_data' / p.stem)
                 lstmdat = [] #if names[int(cls)] == "DriverFace":
-                lstmdat.append(p.stem)
+                lstmdat.append(p.stem + ("_{:04d}.jpg".format(dataset.frame) if dataset.mode == 'video' else ''))
                 with open(txt_path + '.txt', 'r') as f:
                     ddt = f.read()
                     ddt = ddt.split('\n')
