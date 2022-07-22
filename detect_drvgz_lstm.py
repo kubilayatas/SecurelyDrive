@@ -503,7 +503,8 @@ if __name__ == '__main__':
     #opt.cache = True
     #opt.drv_gaze = True
     if opt.source == "nvargus":
-        opt.source = "nvarguscamerasrc sensor-id=0 ! video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, framerate=(fraction)30/1 ! nvvidconv flip-method=5 ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+        #opt.source = "nvarguscamerasrc sensor-id=0 ! video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, framerate=(fraction)30/1 ! nvvidconv flip-method=5 ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+        opt.source = "nvarguscamerasrc sensor-id=0"
     
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
