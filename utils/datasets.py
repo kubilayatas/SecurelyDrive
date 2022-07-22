@@ -208,7 +208,8 @@ class LoadWebcam:  # for inference
         # pipe = 'http://wmccpinetop.axiscam.net/mjpg/video.mjpg'  # IP golf camera
 
         self.pipe = pipe
-        self.cap = cv2.VideoCapture(pipe,cv2.CAP_GSTREAMER)  # video capture object
+        #self.cap = cv2.VideoCapture(pipe,cv2.CAP_GSTREAMER)  # video capture object
+        self.cap = cv2.VideoCapture(" v4l2src device=/dev/video0 ! image/jpeg, format=MJPG ! jpegdec ! video/x-raw,format=BGR ! appsink drop=1", cv2.CAP_GSTREAMER)
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 3)  # set buffer size
 
     def __iter__(self):
