@@ -8,7 +8,7 @@ import torch.backends.cudnn as cudnn
 from numpy import random
 
 from models.experimental import attempt_load
-from utils.datasets import LoadStreams, LoadImages
+from utils.datasets import LoadStreams, LoadImages, LoadWebcam
 from utils.general import check_img_size, non_max_suppression, apply_classifier, scale_coords, xyxy2xywh, \
     strip_optimizer, set_logging, increment_path
 from utils.plots import plot_one_box
@@ -235,7 +235,10 @@ def detect(save_img=True):
     if webcam:
         view_img = True
         cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz)
+        if source.lower().startswith(('nvarguscamerasrc')):
+            dataset = LoadWebcam(source, img_size=imgsz)
+        else:
+            dataset = LoadStreams(source, img_size=imgsz)
     else:
         save_img = True
         dataset = LoadImages(source, img_size=imgsz)
@@ -503,8 +506,8 @@ if __name__ == '__main__':
     #opt.cache = True
     #opt.drv_gaze = True
     if opt.source == "nvargus":
-        #opt.source = "nvarguscamerasrc sensor-id=0 ! video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, framerate=(fraction)30/1 ! nvvidconv flip-method=5 ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
-        opt.source = "nvarguscamerasrc sensor-id=0"
+        opt.source = "nvarguscamerasrc sensor-id=0 ! video/x-raw(memory:NVMM), width=(int)1920, height=(int)1080, framerate=(fraction)30/1 ! nvvidconv flip-method=5 ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
+        #opt.source = "nvarguscamerasrc sensor-id=0"
     
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
