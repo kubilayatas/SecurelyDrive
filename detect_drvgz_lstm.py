@@ -206,7 +206,7 @@ class Bottleneck(nn.Module):
 def detect(save_img=True):
     source, weights, view_img, save_txt, imgsz = opt.source, opt.DetectorWeights, opt.view_img, opt.save_txt, opt.img_size
     webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
-        ('rtsp://', 'rtmp://', 'http://'))
+        ('rtsp://', 'rtmp://', 'http://', 'nvarguscamerasrc'))
 
     # Directories
     save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
