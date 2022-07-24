@@ -159,6 +159,7 @@ class LoadImages:  # for inference
             # Read video
             self.mode = 'video'
             ret_val, img0 = self.cap.read()
+            img0 = cv2.equalizeHist(img0)######################################ben ekledim
             if not ret_val:
                 self.count += 1
                 self.cap.release()
@@ -168,6 +169,7 @@ class LoadImages:  # for inference
                     path = self.files[self.count]
                     self.new_video(path)
                     ret_val, img0 = self.cap.read()
+                    img0 = cv2.equalizeHist(img0)######################################ben ekledim
 
             self.frame += 1
             print('video %g/%g (%g/%g) %s: ' % (self.count + 1, self.nf, self.frame, self.nframes, path), end='')
@@ -176,6 +178,7 @@ class LoadImages:  # for inference
             # Read image
             self.count += 1
             img0 = cv2.imread(path)  # BGR
+            img0 = cv2.equalizeHist(img0)######################################ben ekledim
             assert img0 is not None, 'Image Not Found ' + path
             print('image %g/%g %s: ' % (self.count, self.nf, path), end='')
 
