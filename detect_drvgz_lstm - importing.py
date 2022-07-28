@@ -628,7 +628,7 @@ if __name__ == '__main__':
         n_categories = 6
         n_layer = 3
         lstm_model = LSTM(n_joints,n_hidden,n_categories,n_layer)
-        lstm_model.load_state_dict(torch.load(opt.LSTMWeights))
+        lstm_model.load_state_dict(torch.load(opt.LSTMWeights[0]))
         lstm_model.to(select_device(opt.deviceLSTM))
         lstm_model.eval()
     
