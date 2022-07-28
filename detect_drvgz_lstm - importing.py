@@ -586,6 +586,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--DetectorWeights', nargs='+', type=str, default='ObjectDetectorModel.pt', help='model.pt path(s)')
     parser.add_argument('--DriverGazeWeights', nargs='+', type=str, default='DriverGazeModel.pt', help='model.pt path(s)')
+    parser.add_argument('--LSTMWeights', nargs='+', type=str, default='LSTMmodel.pkl', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='data/images', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
@@ -627,7 +628,7 @@ if __name__ == '__main__':
         n_categories = 6
         n_layer = 3
         lstm_model = LSTM(n_joints,n_hidden,n_categories,n_layer)
-        lstm_model.load_state_dict(torch.load('26.07.2022_04.06_MyData.pkl'))
+        lstm_model.load_state_dict(torch.load(opt.LSTMWeights))
         lstm_model.to(select_device(opt.deviceLSTM))
         lstm_model.eval()
     
