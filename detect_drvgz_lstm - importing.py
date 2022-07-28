@@ -412,12 +412,7 @@ def detect(save_img=True):
                             #cropped_im.show()
                             looking = predict_DriverGaze(cropped_im)
                             _gaze = looking
-                            sp = im0.shape
-                            #lx1 = int(0.95 * sp[1])
-                            #ly1 = int(0.75 * sp[0])
-                            lx1 = int(sp[1]-sp[1]/2)
-                            ly1 = int(20)
-                            im0 = cv2.putText(im0, "Driver Looking: " + looking, (lx1, ly1), 0, 1/2, [225, 0, 0], thickness=1, lineType=cv2.LINE_AA)
+                            im0 = cv2.putText(im0, "Looking: " + looking, (450, 20), 0, 0.5, [225, 0, 0], thickness=1, lineType=cv2.LINE_AA)
                             #print(looking)
                             
                             
@@ -448,8 +443,14 @@ def detect(save_img=True):
                 top_n, top_i = output.topk(1)
                 category_i = top_i[0].item()
                 lab = LABELS[category_i]
-                print(lab)
+                #print(lab)
+                PhoneCall = bool(int(lab[0]))
+                Smoking = bool(int(lab[1]))
+                Texting = bool(int(lab[2]))
                 #print("burayı sonra sil")
+                im0 = cv2.putText(im0, "Phone Call: " + ("True" if PhoneCall else "False"), (0, 20), 0, 0.5, ([0, 0, 255] if PhoneCall else [255, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                im0 = cv2.putText(im0, "   Smoking: " + ("True" if Smoking else "False"), (150, 20), 0, 0.5, ([0, 0, 225] if Smoking else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                im0 = cv2.putText(im0, "   Texting: " + ("True" if Texting else "False"), (300, 20), 0, 0.5, ([0, 0, 225] if Texting else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
 
             # Stream results
             if view_img:
