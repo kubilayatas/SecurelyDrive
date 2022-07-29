@@ -450,11 +450,16 @@ def detect(save_img=True):
                 Smoking = bool(int(o[1]))
                 Texting = bool(int(o[2]))
                 #print("burayı sonra sil")
-                im0 = cv2.putText(im0, "Phone Call: " + ("True" if PhoneCall else "False"), (0, 20), 0, 0.5, ([0, 0, 255] if PhoneCall else [255, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
-                im0 = cv2.putText(im0, "   Smoking: " + ("True" if Smoking else "False"), (150, 20), 0, 0.5, ([0, 0, 225] if Smoking else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
-                im0 = cv2.putText(im0, "   Texting: " + ("True" if Texting else "False"), (300, 20), 0, 0.5, ([0, 0, 225] if Texting else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
-                im0 = cv2.putText(im0, "   Looking: " + (_gaze), (450, 20), 0, 0.5, ([0, 0, 225] if _gaze=="other" else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
-                im0 = cv2.putText(im0, "       Lab: " + lab, (0, 40), 0, 0.5, ([255, 0, 0] if lab=='000' else [0, 0, 255]), thickness=1, lineType=cv2.LINE_AA)
+                width = im0.shape[1]
+                height = im0.shape[0]
+                text_scale = height/960
+                txt_wid = int(width/4)
+                txt_height = int(20*(text_scale/0.5))
+                im0 = cv2.putText(im0, "Phone Call: " + ("True" if PhoneCall else "False"), (0, txt_height), 0, text_scale, ([0, 0, 255] if PhoneCall else [255, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                im0 = cv2.putText(im0, "   Smoking: " + ("True" if Smoking else "False"), (txt_wid*1, txt_height), 0, text_scale, ([0, 0, 225] if Smoking else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                im0 = cv2.putText(im0, "   Texting: " + ("True" if Texting else "False"), (txt_wid*2, txt_height), 0, text_scale, ([0, 0, 225] if Texting else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                im0 = cv2.putText(im0, "   Looking: " + (_gaze),                          (txt_wid*3, txt_height), 0, text_scale, ([0, 0, 225] if _gaze=="other" else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                #im0 = cv2.putText(im0, "       Lab: " + lab, (0, txt_height*2), 0, text_scale, ([255, 0, 0] if lab=='000' else [0, 0, 255]), thickness=1, lineType=cv2.LINE_AA)
 
             # Stream results
             if view_img:
