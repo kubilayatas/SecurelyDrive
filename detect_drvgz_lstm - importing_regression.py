@@ -239,7 +239,7 @@ def elestiem(pred,names,im0shape,imgshape):
     
     for i in range(0,len(names)):
         if names[i] == "Cigarette":
-            fd = df[df['Class']=='{}'.format(i)]
+            fd = df[df['Class']==i]
             fd['Prox'] = abs(fd.Xc.astype(float)-0.0)/abs(fd.Xc.astype(float)-1.0)
             fd = fd.sort_values(by=['Prox'],axis=0)
             fd = fd[fd['Prox']<0.5]
@@ -251,7 +251,7 @@ def elestiem(pred,names,im0shape,imgshape):
                 lstmdat.append(float(fd['Xc'][0])) # Right Hand x coord
                 lstmdat.append(float(fd['Yc'][0])) # Right Hand y coord
         elif names[i] == "Cellphone":
-            fd = df[df['Class']=='{}'.format(i)]
+            fd = df[df['Class']==i]
             fd['Prox'] = abs(fd.Xc.astype(float)-0.0)/abs(fd.Xc.astype(float)-1.0)
             fd = fd.sort_values(by=['Prox'],axis=0)
             fd = fd[fd['Prox']<0.6]
@@ -264,7 +264,7 @@ def elestiem(pred,names,im0shape,imgshape):
                 lstmdat.append(float(fd['Yc'][0])) # Right Hand y coord
             
         elif names[i] == "DriverHand":
-            fd = df[df['Class']=='{}'.format(i)]
+            fd = df[df['Class']==i]
             fd.reset_index(drop=True,inplace=True)
             if len(fd)==0:
                 lstmdat.append(0.0) # Left  Hand x coord
@@ -284,7 +284,7 @@ def elestiem(pred,names,im0shape,imgshape):
                 lstmdat.append(float(fd['Xc'][0])) # Right Hand x coord
                 lstmdat.append(float(fd['Yc'][0])) # Right Hand y coord
         else:
-            fd = df[df['Class']=='{}'.format(i)]
+            fd = df[df['Class']==i]
             fd.reset_index(drop=True,inplace=True)
             if len(fd)==0:
                 lstmdat.append(0.0) # 
