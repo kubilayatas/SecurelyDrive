@@ -44,6 +44,7 @@ def detect():
     if opt.source == 0:
         cap = cv2.VideoCapture(0)
     else:
+        print(opt.source)
         cap = cv2.VideoCapture(opt.source, cv2.CAP_GSTREAMER)
     if cap.isOpened():
         window_handle = cv2.namedWindow("CSI Camera", cv2.WINDOW_AUTOSIZE)
@@ -144,7 +145,14 @@ if __name__ == '__main__':
     #opt.cache = True
     #opt.drv_gaze = True"""
     if opt.source == "csicam":
-        opt.source = gstreamer_pipeline(flip_method=2)
+        opt.source = gstreamer_pipeline(
+            capture_width=3264,
+            capture_height=1848,
+            display_width=1280,
+            display_height=720,
+            framerate=28,
+            flip_method=6
+            )
     elif opt.source == "webcam":
         opt.source = 0
     
