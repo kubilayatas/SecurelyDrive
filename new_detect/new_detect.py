@@ -3,6 +3,7 @@ import cv2
 import torch
 import random
 
+
 from elements.yolo import OBJ_DETECTION
 from models.experimental import attempt_load
 from utils.torch_utils import select_device
@@ -40,7 +41,10 @@ def detect():
     names = Object_detector.classes
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
     
-    cap = cv2.VideoCapture(opt.source, cv2.CAP_GSTREAMER)
+    if opt.source == 0:
+        cap = cv2.VideoCapture(0)
+    else:
+        cap = cv2.VideoCapture(opt.source, cv2.CAP_GSTREAMER)
     if cap.isOpened():
         window_handle = cv2.namedWindow("CSI Camera", cv2.WINDOW_AUTOSIZE)
         # Window
@@ -142,7 +146,7 @@ if __name__ == '__main__':
     if opt.source == "csicam":
         opt.source = gstreamer_pipeline(flip_method=2)
     elif opt.source == "webcam":
-        opt.source = "0"
+        opt.source = 0
     
     with torch.no_grad():
         detect()

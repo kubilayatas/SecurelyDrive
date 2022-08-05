@@ -1,9 +1,11 @@
 import torch
 import cv2
 import numpy as np
+import time
+
 from models.experimental import attempt_load
 from utils.general import non_max_suppression
-from utils.torch_utils import select_device
+from utils.torch_utils import select_device, time_synchronized
 
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #device = select_device(opt.device)
@@ -11,14 +13,17 @@ from utils.torch_utils import select_device
 class OBJ_DETECTION():
     def __init__(self, model_path, device, imsz):
         self.device = select_device(device)
-        self.half = self.device.type != 'cpu'
+        #self.half = self.device.type != 'cpu'
+        self.half = False
         self.yolo_model = attempt_load(weights=model_path, map_location=self.device)
-        if self.half:
-            self.yolo_model.half()
+        #if self.half:
+        #    self.yolo_model.half()
         self.classes = self.yolo_model.module.names if hasattr(self.yolo_model, 'module') else self.yolo_model.names
         self.input_width = imsz
+        
 
     def detect(self,main_img):
+        t0 = time.time()
         height, width = main_img.shape[:2]
         new_height = int((((self.input_width/width)*height)//32)*32)
 
@@ -30,8 +35,11 @@ class OBJ_DETECTION():
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
 
-        pred = self.yolo_model(img, augment=False)[0]
+        t1 = time_synchronized()
+        pred = self.yolo_model((img.half() if self.half else img), augment=False)[0]
         pred = non_max_suppression(pred, conf_thres=0.25, iou_thres=0.45, classes=None)
+        t2 = time_synchronized()
+        #pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
         items = []
         
         if pred[0] is not None and len(pred):
