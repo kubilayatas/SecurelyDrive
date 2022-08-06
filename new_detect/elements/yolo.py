@@ -58,4 +58,4 @@ class OBJ_DETECTION():
 
                 items.append(item)
 
-        return items
+        return items,pred

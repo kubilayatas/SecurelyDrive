@@ -2,11 +2,17 @@ import argparse
 import cv2
 import torch
 import random
+import torchvision.transforms as transforms
+import numpy as np
 
 
 from elements.yolo import OBJ_DETECTION
+from elements.Look_classifier import Look_Classifier
+from elements.Lstm_decision import Lstm_decision
 from models.experimental import attempt_load
 from utils.torch_utils import select_device
+from utils.general import scale_coords
+from utils.plots import plot_one_box
 
 def gstreamer_pipeline(
     capture_width=1280,
@@ -35,9 +41,59 @@ def gstreamer_pipeline(
         )
     )
 
+def equalize_image(img,method = 'HE'):
+    img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+    if method == 'HE':
+        img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+    elif method == 'CLAHE':
+        clahe = cv2.createCLAHE(clipLimit = 5)
+        img_yuv[:,:,0] = clahe.apply(img_yuv[:,:,0])# + 30
+    img = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+    return img
+
+def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True):
+    # Resize image to a 32-pixel-multiple rectangle https://github.com/ultralytics/yolov3/issues/232
+    shape = img.shape[:2]  # current shape [height, width]
+    if isinstance(new_shape, int):
+        new_shape = (new_shape, new_shape)
+
+    # Scale ratio (new / old)
+    r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+    if not scaleup:  # only scale down, do not scale up (for better test mAP)
+        r = min(r, 1.0)
+
+    # Compute padding
+    ratio = r, r  # width, height ratios
+    new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
+    dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+    if auto:  # minimum rectangle
+        dw, dh = np.mod(dw, 32), np.mod(dh, 32)  # wh padding
+    elif scaleFill:  # stretch
+        dw, dh = 0.0, 0.0
+        new_unpad = (new_shape[1], new_shape[0])
+        ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
+
+    dw /= 2  # divide padding into 2 sides
+    dh /= 2
+
+    if shape[::-1] != new_unpad:  # resize
+        img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
+    top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+    left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+    return img, ratio, (dw, dh)
+
+
 def detect():
     
     Object_detector = OBJ_DETECTION(opt.DetectorWeights, opt.device, opt.img_size)
+    
+    if opt.drv_gaze:
+        Gaze_Detector = Look_Classifier(opt.DriverGazeWeights, "resnet50", opt.deviceGAZE)
+    if opt.lstm_detect:
+        LSTM_detector = Lstm_decision(opt.LSTMWeights[0],opt.deviceLSTM)
+    
+    
     names = Object_detector.classes
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
     
@@ -51,10 +107,13 @@ def detect():
         # Window
         while cv2.getWindowProperty("CSI Camera", 0) >= 0:
             ret, frame = cap.read()
+            img = letterbox(frame, new_shape=opt.img_size)[0]
+            im0 = frame.copy()
             if ret:
                 # detection process
-                objs = Object_detector.detect(frame)
-
+                objs,pred= Object_detector.detect(img)
+                LstmDetFlag = True
+                looking = ""
                 # plotting
                 for obj in objs:
                     # print(obj)
@@ -62,10 +121,37 @@ def detect():
                     score = obj['score']
                     [(xmin,ymin),(xmax,ymax)] = obj['bbox']
                     color = colors[names.index(label)]
-                    frame = cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), color, 2) 
-                    frame = cv2.putText(frame, f'{label} ({str(score)})', (xmin,ymin), cv2.FONT_HERSHEY_SIMPLEX , 0.75, color, 1, cv2.LINE_AA)
+                    #gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+                    coords = pred[0][:, :4]
+                    coords = scale_coords(img.shape, coords, im0.shape).round()
+                    plot_one_box(coords.tolist()[0], im0, label=label, color=color, line_thickness=1)
+                    #im0 = cv2.rectangle(im0, (xmin,ymin), (xmax,ymax), color, 2) 
+                    #im0 = cv2.putText(im0, f'{label} ({str(score)})', (xmin,ymin), cv2.FONT_HERSHEY_SIMPLEX , 0.75, color, 1, cv2.LINE_AA)
+                    
+                    if opt.drv_gaze:
+                        if label == "DriverFace":
+                            looking = Gaze_Detector.predict_DriverGaze(frame, obj)
+                            #print(looking)
+                if opt.lstm_detect and LstmDetFlag:
+                    LstmDetFlag = False
+                    lstm_dat = LSTM_detector.elestiem(pred,names,frame.shape,img.shape)
+                    lstm_dat.append(1.0 if looking=="forward" else 0.0)
+                    lstm_o = LSTM_detector.lstm_det(lstm_dat)
+                    lab = ''.join([str(elem) for elem in lstm_o])
+                    PhoneCall = bool(int(lstm_o[0]))
+                    Smoking = bool(int(lstm_o[1]))
+                    Texting = bool(int(lstm_o[2]))
+                    width = im0.shape[1]
+                    height = im0.shape[0]
+                    text_scale = height/960
+                    txt_wid = int(width/4)
+                    txt_height = int(20*(text_scale/0.5))
+                    im0 = cv2.putText(im0, "Phone Call: " + ("True" if PhoneCall else "False"), (0, txt_height), 0, text_scale, ([0, 0, 255] if PhoneCall else [255, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                    im0 = cv2.putText(im0, "   Smoking: " + ("True" if Smoking else "False"), (txt_wid*1, txt_height), 0, text_scale, ([0, 0, 225] if Smoking else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                    im0 = cv2.putText(im0, "   Texting: " + ("True" if Texting else "False"), (txt_wid*2, txt_height), 0, text_scale, ([0, 0, 225] if Texting else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
+                    im0 = cv2.putText(im0, "   Looking: " + (looking),                          (txt_wid*3, txt_height), 0, text_scale, ([0, 0, 225] if looking=="other" else [225, 0, 0]), thickness=1, lineType=cv2.LINE_AA)
 
-            cv2.imshow("CSI Camera", frame)
+            cv2.imshow("CSI Camera", im0)
             keyCode = cv2.waitKey(30)
             if keyCode == ord('q'):
                 break
@@ -77,8 +163,8 @@ def detect():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--DetectorWeights', nargs='+', type=str, default='weights/ObjectDetectorModel.pt', help='model.pt path(s)')
-    parser.add_argument('--DriverGazeWeights', nargs='+', type=str, default='DriverGazeModel.pt', help='model.pt path(s)')
-    parser.add_argument('--LSTMWeights', nargs='+', type=str, default='LSTMmodel.pkl', help='model.pt path(s)')
+    parser.add_argument('--DriverGazeWeights', nargs='+', type=str, default='weights/DriverGazeModel.pt', help='model.pt path(s)')
+    parser.add_argument('--LSTMWeights', nargs='+', type=str, default='weights/LSTMmodel.pkl', help='model.pt path(s)')
     parser.add_argument('--source', type=str, default='csicam', help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=416, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
@@ -101,49 +187,7 @@ if __name__ == '__main__':
     parser.add_argument('--drv-gaze', action='store_true', help='existing project/name ok, do not increment')
     opt = parser.parse_args()
     print(opt)
-    """if opt.drv_gaze:
-        ResNetConfig = namedtuple('ResNetConfig', ['block', 'n_blocks', 'channels'])
-        resnet18_config = ResNetConfig(block = BasicBlock,n_blocks = [2,2,2,2],channels = [64, 128, 256, 512])
-        resnet34_config = ResNetConfig(block = BasicBlock,n_blocks = [3,4,6,3],channels = [64, 128, 256, 512])
-        resnet50_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 4, 6, 3],channels = [64, 128, 256, 512])
-        resnet101_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 4, 23, 3],channels = [64, 128, 256, 512])
-        resnet152_config = ResNetConfig(block = Bottleneck,n_blocks = [3, 8, 36, 3],channels = [64, 128, 256, 512])
-        OUTPUT_DIM = 2
-        DriverGazeModel = ResNet(resnet50_config, OUTPUT_DIM)
-        DriverGazeModel.load_state_dict(torch.load(opt.DriverGazeWeights))
-        DriverGazeModel.to(select_device(opt.deviceGAZE))
-        DriverGazeModel.eval()
     
-    if opt.lstm_detect:
-        n_hidden = 128
-        n_joints = 19
-        #n_categories = 6
-        regression_out = 3
-        n_layer = 3
-        lstm_model = LSTM(n_joints,n_hidden,regression_out,n_layer)
-        lstm_model.load_state_dict(torch.load(opt.LSTMWeights[0]))
-        lstm_model.to(select_device(opt.deviceLSTM))
-        lstm_model.eval()
-    
-    LABELS = [
-    "000", # 0
-    "001", # 1
-    "010", # 2
-    "011", # 3
-    "100", # 4
-    "110" # 5
-    ]
-    #opt.weights = 'best.pt'
-    #opt.source = "0"
-    #opt.source = "./001-AltayMirzaliyev-1.mp4"
-    #opt.source = "./20200224002.mp4"
-    #opt.img_size = 416
-    #opt.conf = 0.4
-    #opt.save_txt = True
-    #opt.view_img = True
-    #opt.save_conf = True
-    #opt.cache = True
-    #opt.drv_gaze = True"""
     if opt.source == "csicam":
         opt.source = gstreamer_pipeline(
             capture_width=3264,
