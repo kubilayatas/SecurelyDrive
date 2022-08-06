@@ -7,4 +7,4 @@ export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/gstreamer-1.0/libgstnvcompositor.so
 export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/tegra/libnvbuf_utils.so
 source ~/.bashrc
 export conda deactivate
-python3.8 ~/SecurelyDrive/new_detect/new_detect.py --img 416 --conf 0.4 --drv-gaze --source csicam
+python3.8 ~/SecurelyDrive/new_detect/new_detect.py --img 416 --conf 0.4 --drv-gaze --source csicam --lstm-detect --LSTMWeights weights/regress.pkl
