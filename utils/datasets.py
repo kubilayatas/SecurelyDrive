@@ -119,13 +119,13 @@ class _RepeatSampler(object):
 
 def equalize_image(img,method = 'HE'):
     img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
-	if method == 'HE':
+    if method == 'HE':
         img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
-	elif method == 'CLAHE':
-	    clahe = cv2.createCLAHE(clipLimit = 5)
-		img_yuv[:,:,0] = clahe.apply(img_yuv[:,:,0]) + 30
-    img = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
-	return img
+    elif method == 'CLAHE':
+        clahe = cv2.createCLAHE(clipLimit = 5)
+        img_yuv[:,:,0] = clahe.apply(img_yuv[:,:,0]) + 30
+        img = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+    return img
 
 class LoadImages:  # for inference
     def __init__(self, path, img_size=640):
